@@ -1,0 +1,45 @@
+ftdi_sio (serial usb kernel module)
+
+
+https://pagekite.net/
+http://owncloud.org/news/
+https://github.com/jvasile/Plinth
+http://www.utilite-computer.com/forum/viewtopic.php?f=62&t=1773
+http://dev.gentoo.org/~armin76/arm/trimslice/install.xml
+
+
+
+Kernel command line: console=ttymxc3,115200 root=/dev/sda2 rw rootwait cm_fx6_v4l_msize=128M vmalloc=256M
+
+console=ttyPSC0,115200
+
+INIT: Id "s0" respawning too fast: disabled for 5 minutes
+
+
+
+
+
+setenv sataroot '/dev/sda3 rw rootwait'
+sata init
+run sataloadkernel
+run sataboot
+
+
+
+
+
+
+
+# ttymxc3 - getty
+#
+# This service maintains a getty on ttymxc3
+
+description     "Get a getty on ttymxc3"
+
+start on runlevel [2345]
+stop on runlevel [016]
+
+respawn
+
+exec /sbin/getty -L 115200 ttymxc3
+# exec /sbin/getty -l /usr/bin/autologin -n 115200 ttymxc3
