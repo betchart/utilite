@@ -1,0 +1,4 @@
+setenv sataroot '/dev/sda3 rw rootwait'
+sata init
+run sataloadkernel
+run sataboot

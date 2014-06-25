@@ -1,0 +1,14 @@
+app-admin/logrotate
+app-admin/sysklogd
+app-editors/emacs
+app-misc/screen
+app-portage/gentoolkit
+dev-embedded/u-boot-tools
+dev-vcs/git
+net-misc/dhcpcd
+net-misc/wicd
+sys-apps/mlocate
+sys-apps/pciutils
+sys-kernel/gentoo-sources
+sys-kernel/linux-firmware
+sys-process/vixie-cron
