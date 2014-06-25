@@ -1,0 +1,132 @@
+Instructions for installing Gentoo on Utilite Pro internal SSD
+
+Loosely following the Gentoo ARM handbook [0]
+
+1. Follow [1] to create a bootable Ubuntu system on a uSD card for the Utilite via <dep-procedure.sh>.
+
+2. Insert the uSD card into the Utilite and boot, using a serial connection, or a keyboard/mouse/monitor for interaction.
+If connecting via a USB-to-serial null-modem, an easy command is:
+{screen /dev/ttyUSB0 115200}
+
+3. Log in (utilite:111111) and connect to the internet.
+From the command line, a cable is the easiest, I think it was automatically configured.
+The commands {iwlist} and {iwconfig} may help.
+Ubuntu uses NetworkManager, which is easier to use graphically.  Could try {nmcli}.
+
+4. Prepare the disk partitions
+{cfdisk /dev/sda}
+You can keep the default bootable 100MB partition (/dev/sda1) intact, with the default kernel and everything.
+Delete the other partitions
+Create a swap (maybe 512MB; /dev/sda2 for me)
+Create a root partition (perhaps all the rest, at least 15GB; /dev/sda3 for me).
+
+5. Create the filesystems
+mkfs.ext4 /dev/sda3
+mkswap /dev/sda2
+swapon /dev/sda2
+
+6. Mount the filesystem
+mkdir /mnt/gentoo
+mount /dev/sda3 /mnt/gentoo
+mkdir /mnt/gentoo/boot
+mount /dev/sda1 /mnt/gentoo/boot
+
+7. Verify (and set) the date.
+Use the {date} command
+
+
+8. Download a Gentoo stage3 tarball from a Gentoo Mirror [2].
+> cd /mnt/gentoo
+Want ARMv7a hardfloat: /releases/arm/autobuilds/current-stage3-armv7a_hardfp/
+You can {sudo apt-get install <prog>}, where prog=links for example, to install links.
+Verify the checksum:
+> sha512sum stage3-armv<version>-<release>.tar.bz2
+Unpack:
+> tar xvjpf stage3-*.tar.bz2
+
+
+9. Edit /mnt/gentoo/etc/portage/make.conf
+CFLAGS
+CXXFLAGS
+CHOST
+MAKEOPTS
+
+
+10. Kernel
+Use the Ubuntu kernel from the SD card.
+mount /dev/sda1 /mnt/gentoo/boot
+rm /mnt/gentoo/boot/*
+cp -p /boot/* /mnt/gentoo/boot
+umount /mnt/gentoo/boot
+cp -pr /lib/modules /mnt/gentoo/lib
+
+11. Chroot
+cp -L /etc/resolv.conf /mnt/gentoo/etc/
+mount -t proc proc /mnt/gentoo/proc
+mount --rbind /sys /mnt/gentoo/sys
+mount --rbind /dev /mnt/gentoo/dev
+chroot /mnt/gentoo /bin/bash
+source /etc/profile
+export PS1="(chroot) $PS1"
+
+12. Portage
+emerge-webrsync
+emerge --sync --quiet
+eselect profile list
+eselect profile set <#>
+nano -w /etc/portage/make.conf # configure USE flags
+
+13. Timezone and Locale
+echo "America/New_York" > /etc/timezone
+emerge --config sys-libs/timezone-data
+nano -w /etc/locale.gen # at least one UTF8
+locale-gen
+locale -a
+eselect locale list
+eselect locale set <#>
+env-update && source /etc/profile
+
+
+14. configuration
+nano -w /etc/fstab
+nano -w /etc/conf.d/hostname # hostname="somename"
+nano -w /etc/hosts
+passwd
+nano -w /etc/rc.conf
+nano -w /etc/conf.d/keymaps
+nano -w /etc/conf.d/hwclock
+
+15. System Tools
+emerge -av sysklogd
+rc-update add sysklogd default
+emerge -av vixie-cron
+rc-update add vixie-cron default
+emerge mlocate
+rc-update add sshd default
+nano -w /etc/inittab
+# SERIAL CONSOLES
+s0:12345:respawn:/sbin/agetty -L 115200 ttymxc3
+echo "sys-kernel/linux-firmware savedconfig" >> /etc/portage/package.use
+nano -w /etc/portage/savedconfig/sys-kernel/linux-firmware
+emerge -av sys-kernel/linux-firmware
+emerge -av wicd
+emerge u-boot-tools
+
+
+Apendices
+
+A. Custom Kernel
+emerge gentoo-sources
+Follow kernel config documented by CompuLab [3]
+make uImage
+make modules_install
+cp arch/arm/boot/uImage /boot/
+
+
+[0] https://www.gentoo.org/doc/en/handbook/handbook-arm.xml
+
+[1] http://www.utilite-computer.com/wiki/index.php/Utilite_Linux_Installation_and_Update
+
+[2] https://www.gentoo.org/main/en/mirrors2.xml
+
+[3] http://www.utilite-computer.com/wiki/index.php/Utilite_Linux_Kernel
